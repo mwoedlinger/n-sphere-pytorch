@@ -40,7 +40,7 @@ def to_cartesian(coords: torch.Tensor) -> torch.Tensor:
     r, phi = coords[..., 0:1], coords[..., 1:]
     
     phi_lower = torch.sin(torch.tril(phi.unsqueeze(-2).expand((*phi.shape, n-1))))
-    phi_sin_prod = torch.prod(phi_lower + torch.triu(torch.ones((*phi.shape, n-1)), diagonal=1), dim=-1)
+    phi_sin_prod = torch.prod(phi_lower + torch.triu(torch.ones((*phi.shape, n-1), device=coords.device), diagonal=1), dim=-1)
     
     x_1 = r * torch.cos(phi[..., 0:1])
     x_mid = r * torch.cos(phi[..., 1:]) * phi_sin_prod[..., :-1]
@@ -52,9 +52,9 @@ if __name__ == '__main__':
     print("Testing ...")
 
     for n in range(2, 50):
-        t_in = torch.rand((10,n))
+        t_in = 10*(torch.rand((10, n)) - 0.5)
         t_spherical = to_spherical(t_in)
         t_cartesian = to_cartesian(t_spherical)
-        assert torch.allclose(t_in, t_cartesian, atol=1e-4), f"Failed for n={n} and t_in={t_in}."
+        assert torch.allclose(t_in, t_cartesian, atol=1e-3), f"Failed for n={n} and t_in={t_in}."
         
     print("All tests passed.")
